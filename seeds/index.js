@@ -40,12 +40,12 @@ const seedDB = async () => {
             },
             images: [
                 {
-                    url: 'https://res.cloudinary.com/douqbebwk/image/upload/v1600060601/YelpCamp/ahfnenvca4tha00h2ubt.png',
-                    filename: 'YelpCamp/ahfnenvca4tha00h2ubt'
+                    url: 'https://img.freepik.com/free-photo/tourist-tents-are-green-misty-forest-mountains_146671-18467.jpg?ga=GA1.1.77164772.1762696781&semt=ais_hybrid&w=740&q=80',
+                    filename: 'Campora/tourist-tents-green-misty-forest'
                 },
                 {
-                    url: 'https://res.cloudinary.com/douqbebwk/image/upload/v1600060601/YelpCamp/ruyoaxgf72nzpi4y6cdi.png',
-                    filename: 'YelpCamp/ruyoaxgf72nzpi4y6cdi'
+                    url: 'https://img.freepik.com/free-photo/tourist-tents-are-green-misty-forest-mountains_146671-18467.jpg?ga=GA1.1.77164772.1762696781&semt=ais_hybrid&w=740&q=80',
+                    filename: 'Campora/tourist-tents-green-misty-forest'
                 }
             ]
         })
