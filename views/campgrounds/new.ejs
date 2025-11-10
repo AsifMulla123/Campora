@@ -1,0 +1,144 @@
+<% layout('layouts/boilerplate')%>
+
+<div class="row">
+  <h1 class="text-center">New Campground</h1>
+  <div class="col-md-6 offset-md-3">
+    <form action="/campgrounds" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
+      <!-- Latitude -->
+      <div class="mb-3">
+        <label for="latitude" class="form-label">Latitude <span style="color: red;">*</span></label>
+        <input type="number" step="any" min="-90" max="90" class="form-control" id="latitude" name="campground[latitude]" placeholder="e.g. 28.6139" value="<%= campground && campground.latitude ? campground.latitude : '' %>" required>
+        <div class="form-text">Decimal degrees between -90 and 90</div>
+      </div>
+
+      <!-- Longitude -->
+      <div class="mb-3">
+        <label for="longitude" class="form-label">Longitude <span style="color: red;">*</span></label>
+        <input type="number" step="any" min="-180" max="180" class="form-control" id="longitude" name="campground[longitude]" placeholder="e.g. 77.2090" value="<%= campground && campground.longitude ? campground.longitude : '' %>" required>
+        <div class="form-text">Decimal degrees between -180 and 180</div>
+      </div>
+
+      <!-- Title -->
+      <div class="mb-3">
+        <label class="form-label" for="title">Title <span style="color: red;">*</span></label>
+        <input class="form-control" type="text" id="title" name="campground[title]" value="<%= campground ? campground.title : '' %>" required>
+      </div>
+
+      <!-- Location -->
+      <div class="mb-3">
+        <label class="form-label" for="location">Location <span style="color: red;">*</span></label>
+        <input class="form-control" type="text" id="location" name="campground[location]" value="<%= campground ? campground.location : '' %>" required>
+      </div>
+
+      <!-- Small interactive map to pick coordinates -->
+      <div class="mb-3">
+        <label class="form-label">Pick location on map (click to set coords)</label>
+        <div id="pickerMap" style="height:300px; border-radius:6px;"></div>
+        <div class="form-text">Click on the map to fill Latitude & Longitude above.</div>
+      </div>
+
+      <!-- Price Type -->
+      <div class="mb-3">
+        <label class="form-label" for="priceType">Campground Type <span style="color: red;">*</span></label>
+        <select class="form-control" id="priceType" name="campground[price]" required onchange="togglePriceAmount()">
+          <option value="">-- Select --</option>
+          <option value="free" <% if(campground && campground.price === 'free') { %>selected<% } %>>Free</option>
+          <option value="paid" <% if(campground && campground.price === 'paid') { %>selected<% } %>>Paid</option>
+        </select>
+      </div>
+
+      <!-- Price Amount (only for paid) -->
+      <div class="mb-3" id="priceAmountDiv" style="display: none;">
+        <label class="form-label" for="priceAmount">Price per Night <span style="color: red;">*</span></label>
+        <div class="input-group">
+          <span class="input-group-text">$</span>
+          <input type="number" class="form-control" id="priceAmount" placeholder="0.00" step="0.01" min="0.01" name="campground[priceAmount]" value="<%= campground ? campground.priceAmount : '' %>">
+        </div>
+      </div>
+
+      <script>
+        function togglePriceAmount() {
+          const priceType = document.getElementById('priceType').value;
+          const priceAmountDiv = document.getElementById('priceAmountDiv');
+          const priceAmountInput = document.getElementById('priceAmount');
+          if (priceType === 'paid') {
+            priceAmountDiv.style.display = 'block';
+            priceAmountInput.required = true;
+          } else {
+            priceAmountDiv.style.display = 'none';
+            priceAmountInput.required = false;
+            priceAmountInput.value = '';
+          }
+        }
+      </script>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label" for="description">Description</label>
+        <textarea class="form-control" id="description" name="campground[description]"></textarea>
+        <div class="valid-feedback">Looks good!</div>
+      </div>
+
+      <!-- Images -->
+      <div class="mb-3">
+        <label class="form-label" for="image">Images <span style="color: red;">*</span></label>
+        <input type="file" class="form-control" id="image" name="image" multiple required accept="image/*">
+        <div class="form-text">Select 1-5 images</div>
+      </div>
+
+      <div class="mb-3">
+        <button class="btn btn-success">Add Campground</button>
+      </div>
+    </form>
+
+    <a href="/campgrounds">All Campgrounds</a>
+  </div>
+</div>
+
+
+<!-- Picker Map script: requires Leaflet to be loaded in boilerplate -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // create map in #pickerMap
+    try {
+      const mapEl = document.getElementById('pickerMap');
+      if (!mapEl) return;
+      // default center
+      const defaultLat = 20, defaultLng = 78;
+      const pickerMap = L.map('pickerMap').setView([defaultLat, defaultLng], 5);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(pickerMap);
+
+      let marker = null;
+      // if user clicks, set inputs and move marker
+      pickerMap.on('click', function(e) {
+        const lat = e.latlng.lat.toFixed(6);
+        const lng = e.latlng.lng.toFixed(6);
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+        if (marker) marker.setLatLng(e.latlng);
+        else marker = L.marker(e.latlng).addTo(pickerMap);
+      });
+
+      // optional: if inputs changed manually, move marker
+      function setMarkerFromInputs() {
+        const latVal = parseFloat(document.getElementById('latitude').value);
+        const lngVal = parseFloat(document.getElementById('longitude').value);
+        if (!Number.isNaN(latVal) && !Number.isNaN(lngVal)) {
+          const latlng = L.latLng(latVal, lngVal);
+          if (marker) marker.setLatLng(latlng);
+          else marker = L.marker(latlng).addTo(pickerMap);
+          pickerMap.setView(latlng, 10);
+        }
+      }
+      document.getElementById('latitude').addEventListener('change', setMarkerFromInputs);
+      document.getElementById('longitude').addEventListener('change', setMarkerFromInputs);
+
+    } catch (err) {
+      console.error('Picker map error:', err);
+    }
+  });
+</script>

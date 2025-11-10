@@ -1,0 +1,307 @@
+<% layout('layouts/boilerplate')%>
+
+<div class="row">
+  <h1 class="text-center">Edit Campground</h1>
+
+  <div class="col-md-6 offset-md-3">
+    <form
+      action="/campgrounds/<%=campground._id%>?_method=PUT"
+      method="POST"
+      novalidate
+      class="validated-form"
+      enctype="multipart/form-data"
+      id="editCampgroundForm"
+    >
+      <!-- Title -->
+      <div class="mb-3">
+        <label class="form-label" for="title">Title</label>
+        <input
+          class="form-control"
+          type="text"
+          id="title"
+          name="campground[title]"
+          value="<%=campground.title %>"
+          required
+        />
+      </div>
+
+      <!-- Location -->
+      <div class="mb-3">
+        <label class="form-label" for="location">Location</label>
+        <input
+          class="form-control"
+          type="text"
+          id="location"
+          name="campground[location]"
+          value="<%=campground.location %>"
+          required
+        />
+      </div>
+
+      <!-- Latitude -->
+      <div class="mb-3">
+        <label class="form-label" for="latitude">Latitude</label>
+        <input
+          type="number"
+          step="any"
+          min="-90"
+          max="90"
+          class="form-control"
+          id="latitude"
+          name="campground[latitude]"
+          placeholder="e.g. 28.6139"
+          value="<%= campground.geometry && campground.geometry.coordinates ? campground.geometry.coordinates[1] : '' %>"
+          required
+        />
+        <div class="form-text">Decimal degrees between -90 and 90.</div>
+      </div>
+
+      <!-- Longitude -->
+      <div class="mb-3">
+        <label class="form-label" for="longitude">Longitude</label>
+        <input
+          type="number"
+          step="any"
+          min="-180"
+          max="180"
+          class="form-control"
+          id="longitude"
+          name="campground[longitude]"
+          placeholder="e.g. 77.2090"
+          value="<%= campground.geometry && campground.geometry.coordinates ? campground.geometry.coordinates[0] : '' %>"
+          required
+        />
+        <div class="form-text">Decimal degrees between -180 and 180.</div>
+      </div>
+
+      <!-- Picker Map for Edit -->
+      <div class="mb-3">
+        <label class="form-label">Adjust location on the map (click to set coords)</label>
+        <div id="pickerMapEdit" style="height:300px; border-radius:6px;"></div>
+        <div class="form-text">Click on the map to change Latitude & Longitude above.</div>
+      </div>
+
+      <!-- Price Type -->
+      <div class="mb-3">
+        <label class="form-label" for="priceType">Campground Type</label>
+        <select class="form-control" id="priceType" name="campground[price]" required onchange="togglePriceAmount()">
+          <option value="free" <% if(campground.price === 'free') { %>selected<% } %>>Free</option>
+          <option value="paid" <% if(campground.price === 'paid') { %>selected<% } %>>Paid</option>
+        </select>
+        <div class="valid-feedback">Looks good!</div>
+      </div>
+
+      <!-- Price Amount (only for paid) -->
+      <div class="mb-3" id="priceAmountDiv" <% if(campground.price !== 'paid') { %>style="display: none;"<% } %>>
+        <label class="form-label" for="priceAmount">Price per Night</label>
+        <div class="input-group">
+          <span class="input-group-text">$</span>
+          <input type="number" class="form-control" id="priceAmount" placeholder="0.00" step="0.01" min="0.01" name="campground[priceAmount]" value="<%=campground.priceAmount || '' %>">
+        </div>
+      </div>
+
+      <script>
+        function togglePriceAmount() {
+          const priceType = document.getElementById('priceType').value;
+          const priceAmountDiv = document.getElementById('priceAmountDiv');
+          const priceAmountInput = document.getElementById('priceAmount');
+          if (priceType === 'paid') {
+            priceAmountDiv.style.display = 'block';
+            priceAmountInput.required = true;
+          } else {
+            priceAmountDiv.style.display = 'none';
+            priceAmountInput.required = false;
+            priceAmountInput.value = '';
+          }
+        }
+      </script>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label" for="description">Description</label>
+        <textarea
+          class="form-control"
+          id="description"
+          name="campground[description]"
+          rows="3"
+        ><%= campground.description %></textarea>
+        <div class="valid-feedback">Looks good!</div>
+      </div>
+
+      <!-- Current Images -->
+      <% if(campground.images.length > 0) { %>
+      <div class="mb-3">
+        <label class="form-label">Current Images</label>
+        <div class="d-flex flex-wrap gap-2">
+          <% campground.images.forEach(function(img, i) { %>
+            <div class="position-relative existing-image-item" style="display: inline-block; width: 120px; height: 120px;">
+              <img src="<%= img.thumbnail || img.url %>" class="img-thumbnail" alt="Camp Image" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+              <button type="button" style="position: absolute; top: -8px; right: -8px; background: red; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; padding: 0; cursor: pointer; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center;" onclick="deleteImage(this, '<%=img.filename%>')" title="Delete">&times;</button>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Add More Images -->
+      <div class="mb-3">
+        <label class="form-label" for="image">Add more images (optional)</label>
+        <div class="form-file custom-file">
+          <input
+            type="file"
+            class="form-file-input"
+            id="image"
+            name="image"
+            multiple
+            accept="image/*"
+            onchange="showNewImages(event)"
+          />
+          <label class="form-file-label" for="image">
+            <span class="form-file-text custom-file-label">Choose image(s)...</span>
+            <span class="form-file-button">Browse</span>
+          </label>
+        </div>
+        <div class="form-text">Current: <%= campground.images.length %>/5 images. Max 5 total. (Min 1 image required)</div>
+      </div>
+
+      <script>
+        function validateImages() {
+          const existingImages = document.querySelectorAll('.existing-image-item').length;
+          const newImageInput = document.getElementById('image');
+          const newImages = newImageInput.files.length;
+          const totalImages = existingImages + newImages;
+          
+          if (totalImages === 0) {
+            alert('At least 1 image is required. Please add an image if you removed all existing ones.');
+            return false;
+          }
+          if (totalImages > 5) {
+            alert('Maximum 5 images allowed.');
+            return false;
+          }
+          return true;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+          const form = document.getElementById('editCampgroundForm');
+          if (form) {
+            form.addEventListener('submit', function(e) {
+              if (!validateImages()) {
+                e.preventDefault();
+              }
+            });
+          }
+        });
+      </script>
+
+      <!-- New Images Preview -->
+      <div id="newImagePreview" class="mb-3" style="display: none;">
+        <label class="form-label">New Images</label>
+        <div id="newImageContainer" class="d-flex flex-wrap gap-3"></div>
+      </div>
+
+      <!-- Submit -->
+      <div class="mb-3">
+        <button class="btn btn-info">Update Campground</button>
+      </div>
+    </form>
+
+    <a href="/campgrounds/<%= campground._id %>">Back To Campground</a>
+  </div>
+</div>
+
+<script>
+  function deleteImage(btn, filename) {
+    const form = document.getElementById('editCampgroundForm');
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'deleteImages[]';
+    hidden.value = filename;
+    form.appendChild(hidden);
+    btn.parentElement.remove();
+  }
+
+  function showNewImages(event) {
+    const files = event.target.files;
+    const container = document.getElementById('newImageContainer');
+    const previewDiv = document.getElementById('newImagePreview');
+    const existing = document.querySelectorAll('.existing-image-item').length;
+    const canAdd = 5 - existing;
+
+    if (files.length === 0) {
+      previewDiv.style.display = 'none';
+      return;
+    }
+
+    if (files.length > canAdd) {
+      alert(`You can only add ${canAdd} more image(s). Max 5 total.`);
+      return;
+    }
+
+    previewDiv.style.display = 'block';
+    container.innerHTML = '';
+
+    Array.from(files).forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const wrapper = document.createElement('div');
+        wrapper.style.width = '120px';
+        wrapper.style.height = '120px';
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '4px';
+        wrapper.appendChild(img);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.innerHTML = '&times;';
+        del.style.position = 'absolute';
+        del.style.top = '-8px';
+        del.style.right = '-8px';
+        del.style.background = 'red';
+        del.style.color = 'white';
+        del.style.border = 'none';
+        del.style.borderRadius = '50%';
+        del.style.width = '28px';
+        del.style.height = '28px';
+        del.style.cursor = 'pointer';
+        del.style.fontSize = '20px';
+        del.style.display = 'flex';
+        del.style.alignItems = 'center';
+        del.style.justifyContent = 'center';
+        del.onclick = function(e) {
+          e.preventDefault();
+          removeNewImage(index);
+        };
+        wrapper.appendChild(del);
+
+        container.appendChild(wrapper);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function removeNewImage(index) {
+    const input = document.getElementById('image');
+    const dt = new DataTransfer();
+    for (let i = 0; i < input.files.length; i++) {
+      if (i !== index) {
+        dt.items.add(input.files[i]);
+      }
+    }
+    input.files = dt.files;
+    showNewImages({ target: input });
+  }
+</script>
+
+<!-- Inject the campground data safely for client-side scripts -->
+<script>window.campgroundJSON = <%- JSON.stringify(campground) %>;</script>
+
+<!-- Load the edit picker map script -->
+<script src="/javascripts/editPickerMap.js"></script>

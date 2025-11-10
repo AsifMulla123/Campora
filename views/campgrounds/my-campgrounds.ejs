@@ -1,0 +1,94 @@
+<% layout('layouts/boilerplate')%>
+
+<div class="container mt-5">
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h1>My Campgrounds</h1>
+        </div>
+        <div class="col-auto">
+            <a href="/campgrounds/new" class="btn btn-primary">+ New Campground</a>
+        </div>
+    </div>
+
+    <% if(campgrounds.length === 0) { %>
+        <div class="alert alert-info" role="alert">
+            You haven't listed any campgrounds yet. <a href="/campgrounds/new">Create your first listing</a>!
+        </div>
+    <% } else { %>
+        <div class="row">
+            <% campgrounds.forEach(campground => { %>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <% if(campground.images && campground.images.length > 0) { %>
+                            <img src="<%= campground.images[0].url %>" class="card-img-top" alt="<%= campground.title %>" style="height: 200px; object-fit: cover;">
+                        <% } else { %>
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                        <% } %>
+                        
+                        <div class="card-body">
+                            <h5 class="card-title"><%= campground.title %></h5>
+                            <p class="card-text text-muted"><%= campground.location %></p>
+                            
+                            <div class="mb-3">
+                                <% if(campground.price === 'free') { %>
+                                    <span class="badge bg-success">Free</span>
+                                <% } else { %>
+                                    <span class="badge bg-info">$<%= campground.priceAmount %>/night</span>
+                                <% } %>
+                            </div>
+
+                            <div class="booking-stats mb-3">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Bookings</small>
+                                        <strong class="h6"><%= campground.totalBookings %></strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Reviews</small>
+                                        <strong class="h6">0</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="/campgrounds/<%= campground._id %>" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="/campgrounds/<%= campground._id %>/edit" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="/bookings/campground/<%= campground._id %>" class="btn btn-sm btn-info">
+                                    Bookings (<%= campground.totalBookings %>)
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer bg-white">
+                            <form action="/campgrounds/<%= campground._id %>?_method=DELETE" method="POST" style="display: inline;">
+                                <button class="btn btn-sm btn-danger w-100" onclick="return confirm('Are you sure? This will delete the campground and all its data.')">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+
+    <a href="/campgrounds" class="btn btn-secondary mt-4">Back to All Campgrounds</a>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .booking-stats {
+        border-top: 1px solid #dee2e6;
+        border-bottom: 1px solid #dee2e6;
+        padding: 0.75rem 0;
+        margin: 1rem 0 !important;
+    }
+</style>

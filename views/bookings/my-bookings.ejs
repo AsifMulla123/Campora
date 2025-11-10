@@ -1,0 +1,105 @@
+<% layout('layouts/boilerplate')%>
+
+<div class="container mt-5">
+    <h1 class="mb-4">My Bookings</h1>
+
+    <% if(bookings.length === 0) { %>
+        <div class="alert alert-info" role="alert">
+            You haven't made any bookings yet. <a href="/campgrounds">Browse campgrounds</a> to make your first booking!
+        </div>
+    <% } else { %>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Campground</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Nights</th>
+                        <th>Total Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% bookings.forEach(booking => { %>
+                        <tr>
+                            <td>
+                                <a href="/campgrounds/<%= booking.campground._id %>">
+                                    <%= booking.campground.title %>
+                                </a>
+                            </td>
+                            <td><%= booking.checkInDate.toLocaleDateString() %></td>
+                            <td><%= booking.checkOutDate.toLocaleDateString() %></td>
+                            <td><%= booking.numberOfNights %></td>
+                            <td>$<%= booking.totalPrice %></td>
+                            <td>
+                                <% if(booking.status === 'confirmed') { %>
+                                    <span class="badge bg-success">Confirmed</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    <% if(booking.cancellationReason) { %>
+                                        <br><small class="text-muted">Reason: <%= booking.cancellationReason %></small>
+                                    <% } %>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if(booking.status === 'confirmed') { %>
+                                    <button type="button" class="btn btn-sm btn-warning" onclick="showCancelForm('<%= booking._id %>', '<%= booking.campground.title %>')">
+                                        Cancel
+                                    </button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+
+    <a href="/campgrounds" class="btn btn-secondary mt-3">Back to Campgrounds</a>
+</div>
+
+<!-- Cancel Booking Modal -->
+<div class="modal fade" id="cancelReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Booking</h5>
+                <button type="button" class="btn-close" onclick="closeModal()" aria-label="Close"></button>
+            </div>
+            <form id="cancelForm" method="POST">
+                <div class="modal-body">
+                    <p>You are cancelling your booking for <strong id="campgroundName"></strong></p>
+                    <div class="mb-3">
+                        <label for="cancellationReason" class="form-label">Reason for Cancellation (Optional)</label>
+                        <textarea class="form-control" id="cancellationReason" name="cancellationReason" rows="3" placeholder="Let us know why you're cancelling..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
+                    <button type="submit" class="btn btn-danger">Confirm Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentModal = null;
+    
+    function showCancelForm(bookingId, campgroundName) {
+        document.getElementById('campgroundName').textContent = campgroundName;
+        document.getElementById('cancelForm').action = `/bookings/${bookingId}/cancel-booking`;
+        document.getElementById('cancellationReason').value = '';
+        const modalElement = document.getElementById('cancelReasonModal');
+        currentModal = new bootstrap.Modal(modalElement);
+        currentModal.show();
+    }
+    
+    function closeModal() {
+        if (currentModal) {
+            currentModal.hide();
+        }
+    }
+</script>
