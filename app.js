@@ -50,14 +50,14 @@ const store = MongoStore.create({
   mongoUrl: dbUrl,
   touchAfter: 24 * 3600, // lazy update period (in seconds)
   crypto: {
-    secret: process.env.SECRET || 'thisshouldbeabettersecret'
+    secret: process.env.SESSION_SECRET
   }
 });
 
 const sessionConfig = {
   store,
   name: 'session',
-  secret: process.env.SECRET || 'thisshouldbeabettersecret',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: {
